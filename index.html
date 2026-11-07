@@ -2,8 +2,8 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>РЕАКЦИЯ — версия 7.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>РЕАКЦИЯ — версия 8.0</title>
     <meta
       name="description"
       content="Быстрая аркада на реакцию: тренируй точность, собирай комбо, открывай скины и соревнуйся в рейтинге."
@@ -386,9 +386,62 @@
           background 0.15s ease,
           transform 0.1s ease;
       }
+      /* ===== REACTION 8.0: mobile-first polish ===== */
+      html {
+        min-height: 100%;
+        background: #080e1b;
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        min-height: 100svh;
+        overscroll-behavior-y: contain;
+      }
+      #game {
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #target {
+        touch-action: manipulation;
+        -webkit-user-drag: none;
+      }
+      .menu-actions button {
+        flex: 1 1 145px;
+      }
+      .leaderboard-filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin: 12px 0;
+        text-align: left;
+      }
+      .leaderboard-filters label {
+        display: grid;
+        gap: 5px;
+        color: #91a9bc;
+        font-size: 12px;
+      }
+      .leaderboard-filters select {
+        width: 100%;
+        margin: 0;
+        min-width: 0;
+      }
+      .competition-note {
+        padding: 10px 12px;
+        margin: 10px 0;
+        border: 1px solid #31536b;
+        border-radius: 12px;
+        background: #0d1b2b;
+        color: #b7c9d8;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .highlight-row {
+        background: #38e8b51a;
+      }
       @media (max-width: 600px) {
         body {
-          padding: 10px;
+          padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
         }
         h1 {
           font-size: clamp(27px, 8vw, 38px);
@@ -399,8 +452,18 @@
           margin: 14px auto;
         }
         #game {
-          height: min(58vh, 420px);
-          min-height: 270px;
+          height: min(58svh, 440px);
+          min-height: 260px;
+        }
+        button,
+        select {
+          min-height: 48px;
+        }
+        .menu-actions button {
+          flex: 1 1 135px;
+        }
+        .leaderboard-filters {
+          grid-template-columns: 1fr;
         }
         .stats {
           gap: 6px;
@@ -433,7 +496,7 @@
   <body>
     <h1>⚡ РЕАКЦИЯ</h1>
     <div class="subtitle">ПРОВЕРЬ СВОЮ СКОРОСТЬ</div>
-    <div class="muted" style="margin-top: 7px">ВЕРСИЯ 7.0 · CHALLENGE MODE</div>
+    <div class="muted" style="margin-top: 7px">ВЕРСИЯ 8.0 · FRIEND CHALLENGE</div>
     <div id="challengeBanner" class="config-note hidden" style="max-width:550px;margin:14px auto;text-align:center"></div>
 
     <section id="menu" class="panel">
@@ -455,6 +518,7 @@
       <br />
       <button class="secondary" onclick="openShop()">🛒 МАГАЗИН</button>
       <div class="menu-actions">
+        <button class="secondary" onclick="inviteFriend()">👥 ПРИГЛАСИТЬ ДРУГА</button>
         <button class="secondary" onclick="showTutorial()">🎓 ОБУЧЕНИЕ</button>
         <button class="secondary" onclick="openLeaderboard()">
           🏆 РЕКОРДЫ
@@ -462,6 +526,7 @@
         <button class="secondary" onclick="openSettings()">⚙️ НАСТРОЙКИ</button>
       </div>
 
+      <div id="inviteStatus" class="online-status" aria-live="polite"></div>
       <p id="menuRecord">🏆 Рекорд: 0</p>
 
       <div class="v5-grid" aria-live="polite">
@@ -630,12 +695,29 @@
     >
       <div class="modal-card">
         <h2 id="leaderboardTitle">🏆 Лучшие результаты</h2>
-        <label for="leaderboardMode">Сложность:</label>
-        <select id="leaderboardMode" onchange="renderLeaderboard()">
-          <option value="easy">Лёгкая</option>
-          <option value="normal" selected>Нормальная</option>
-          <option value="hard">Сложная</option>
-        </select>
+        <div class="leaderboard-filters">
+          <label for="leaderboardMode">Сложность
+            <select id="leaderboardMode" onchange="renderLeaderboard()">
+              <option value="easy">Лёгкая</option>
+              <option value="normal" selected>Нормальная</option>
+              <option value="hard">Сложная</option>
+            </select>
+          </label>
+          <label for="leaderboardPeriod">Соревнование
+            <select id="leaderboardPeriod" onchange="loadOnlineLeaderboard()">
+              <option value="all">За всё время</option>
+              <option value="week" selected>За 7 дней</option>
+              <option value="today">Сегодня</option>
+            </select>
+          </label>
+          <label for="leaderboardLimit">Показать игроков
+            <select id="leaderboardLimit" onchange="loadOnlineLeaderboard()">
+              <option value="10" selected>Топ-10</option>
+              <option value="100">Топ-100</option>
+            </select>
+          </label>
+        </div>
+        <div class="competition-note">⚡ Соревнуйся с игроками на своей сложности. Недельный рейтинг обновляется автоматически, а общий рейтинг хранит лучшие результаты за всё время.</div>
         <div id="leaderboardContent"></div>
         <hr style="border: 0; border-top: 1px solid #31536b; margin: 18px 0" />
         <h3 style="color: #38e8b5">🌍 Общая онлайн-таблица</h3>
@@ -643,8 +725,7 @@
           <p class="muted">Загрузка онлайн-таблицы...</p>
         </div>
         <p class="muted">
-          Онлайн-результаты видны всем игрокам. Личная таблица выше хранится
-          только на этом устройстве.
+          Онлайн-рейтинг виден всем игрокам. Можно переключать общий, недельный и дневной зачёт. Личная таблица хранится только на этом устройстве.
         </p>
         <button onclick="closeModal('leaderboardModal')">ЗАКРЫТЬ</button>
       </div>
@@ -659,7 +740,7 @@
       const SUPABASE_ANON_KEY =
         "sb_publishable_Mi4vpfS3SZaLx0R8MnKbVA_ogLdCOT3";
       const ONLINE_TABLE = "leaderboard_scores";
-      const GAME_VERSION = "7.0";
+      const GAME_VERSION = "8.0";
       const SHARE_GAME_URL = "https://wonderful-clafoutis-8a4ac6.netlify.app/";
       const incomingParams = new URLSearchParams(window.location.search);
       const challengeTarget = (() => {
@@ -739,6 +820,30 @@
           : `Не удалось скопировать автоматически. Скопируй эту ссылку вручную: ${url.toString()}`;
       }
 
+      async function inviteFriend() {
+        const url = SHARE_GAME_URL;
+        const text = "Заходи в РЕАКЦИЮ! Проверь скорость реакции и попробуй обойти мой результат.";
+        const status = $("inviteStatus");
+        status.textContent = "Готовим приглашение...";
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: "РЕАКЦИЯ — сыграем?", text, url });
+            status.textContent = "✅ Приглашение отправлено!";
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") {
+              status.textContent = "Отправка отменена. Можешь пригласить друга ещё раз.";
+              return;
+            }
+            console.warn("Native invite share failed; using copy fallback:", error);
+          }
+        }
+        const copied = await copyShareText(`${text} ${url}`);
+        status.textContent = copied
+          ? "✅ Ссылка на игру скопирована. Отправь её другу!"
+          : `Скопируй ссылку вручную: ${url}`;
+      }
+
       const escapeHTML = (value) =>
         String(value).replace(
           /[&<>"']/g,
@@ -767,34 +872,46 @@
         const container = $("onlineLeaderboardContent");
         if (!onlineConfigured()) {
           container.innerHTML =
-            '<div class="config-note">Онлайн-таблица пока не подключена. Создай бесплатный проект Supabase, выполни SQL из инструкции и вставь Project URL и anon key в начало JavaScript-кода.</div>';
+            '<div class="config-note">Онлайн-таблица пока не подключена. Проверь настройки проекта Supabase.</div>';
           return;
         }
-        container.innerHTML =
-          '<p class="muted">Загружаем лучшие результаты...</p>';
+        container.innerHTML = '<p class="muted">Загружаем рейтинг...</p>';
         try {
           const mode = $("leaderboardMode").value;
-          const url = `${SUPABASE_URL}/rest/v1/${ONLINE_TABLE}?select=nickname,score,difficulty,created_at&difficulty=eq.${encodeURIComponent(mode)}&order=score.desc,created_at.asc&limit=100`;
+          const period = $("leaderboardPeriod")?.value || "week";
+          const limit = Number($("leaderboardLimit")?.value || 10);
+          const params = new URLSearchParams({
+            select: "nickname,score,difficulty,created_at",
+            difficulty: `eq.${mode}`,
+            order: "score.desc,created_at.asc",
+            limit: String([10, 100].includes(limit) ? limit : 10),
+          });
+          if (period === "today" || period === "week") {
+            const since = new Date();
+            if (period === "today") since.setHours(0, 0, 0, 0);
+            else since.setDate(since.getDate() - 7);
+            params.set("created_at", `gte.${since.toISOString()}`);
+          }
+          const url = `${SUPABASE_URL}/rest/v1/${ONLINE_TABLE}?${params.toString()}`;
           const response = await fetch(url, { headers: getSupabaseHeaders() });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const rows = await response.json();
           if (!rows.length) {
-            container.innerHTML =
-              '<p class="muted">Пока нет онлайн-результатов. Стань первым!</p>';
+            container.innerHTML = '<p class="muted">В этом соревновании пока нет результатов. Стань первым!</p>';
             return;
           }
+          const periodLabel = period === "today" ? "сегодня" : period === "week" ? "за последние 7 дней" : "за всё время";
           container.innerHTML =
+            `<p class="muted">Показаны ${rows.length} лучших результатов · ${periodLabel}</p>` +
             '<div class="online-table-wrap"><table class="leaderboard-table"><thead><tr><th>Место</th><th>Игрок</th><th>Очки</th></tr></thead><tbody>' +
-            rows
-              .map(
-                (r, i) =>
-                  `<tr><td>${i + 1}</td><td>${escapeHTML(r.nickname)}</td><td>${Number(r.score) || 0}</td></tr>`,
-              )
-              .join("") +
+            rows.map((r, i) => {
+              const nickname = escapeHTML(r.nickname || "Игрок");
+              const mine = localStorage.getItem("reactionNickname") === (r.nickname || "");
+              return `<tr${mine ? ' class="highlight-row"' : ""}><td>${i + 1}</td><td>${nickname}${mine ? " · вы" : ""}</td><td>${Number(r.score) || 0}</td></tr>`;
+            }).join("") +
             "</tbody></table></div>";
         } catch (error) {
-          container.innerHTML =
-            '<p class="online-status">Не удалось загрузить таблицу. Проверь настройки Supabase и интернет-соединение.</p>';
+          container.innerHTML = '<p class="online-status">Не удалось загрузить рейтинг. Проверь подключение и попробуй обновить таблицу.</p>';
           console.error("Online leaderboard load failed:", error);
         }
       }
@@ -859,6 +976,8 @@
       let combo = 0;
       let level = 1;
       let playing = false;
+      let missesThisRun = 0;
+      let bonusTimeAwarded = 0;
 
       let timer = null;
       let moveTimer = null;
@@ -1285,8 +1404,9 @@
       }
 
       function moveTarget() {
+        const minTargetSize = window.matchMedia("(max-width: 600px)").matches ? 48 : 25;
         const size = Math.max(
-          25,
+          minTargetSize,
           settings[$("difficulty").value].size - (level - 1) * 5,
         );
 
@@ -1329,6 +1449,8 @@
         combo = 0;
         level = 1;
         runBestCombo = 0;
+        missesThisRun = 0;
+        bonusTimeAwarded = 0;
         finishedThisRun = false;
         playing = true;
 
@@ -1394,8 +1516,10 @@
               ? "🏁 ПОПРОБУЙ ЕЩЁ РАЗ!"
               : "🏁 Раунд завершён!";
         $("finalScore").textContent = score;
+        const runAttempts = totalHits + missesThisRun;
+        const accuracy = runAttempts ? Math.round((totalHits / runAttempts) * 100) : 0;
         $("resultDetails").textContent =
-          `Сложность: ${mode === "easy" ? "Лёгкая" : mode === "hard" ? "Сложная" : "Нормальная"} · Лучшее комбо: ×${runBestCombo} · Всего попаданий: ${totalHits}` +
+          `Сложность: ${mode === "easy" ? "Лёгкая" : mode === "hard" ? "Сложная" : "Нормальная"} · Лучшее комбо: ×${runBestCombo} · Точность: ${accuracy}% · Промахи: ${missesThisRun} · Бонус времени: +${bonusTimeAwarded} сек.` +
           (challengeTarget > 0 ? ` · Вызов друга: ${score > challengeTarget ? "победа!" : `нужно больше ${challengeTarget}`}` : "");
         $("shareStatus").textContent = "";
         $("resultPanel").classList.remove("hidden");
@@ -1412,6 +1536,13 @@
 
         combo++;
         runBestCombo = Math.max(runBestCombo, combo);
+        let earnedTimeBonus = 0;
+        if (combo > 0 && combo % 10 === 0 && time < 45) {
+          earnedTimeBonus = Math.min(2, 45 - time);
+          time += earnedTimeBonus;
+          bonusTimeAwarded += earnedTimeBonus;
+          $("time").textContent = time;
+        }
         totalHits++;
         bestCombo = Math.max(bestCombo, combo);
 
@@ -1438,6 +1569,8 @@
         if (level > oldLevel) {
           $("message").textContent = "🔥 НОВЫЙ УРОВЕНЬ: " + level;
           setMoveSpeed();
+        } else if (earnedTimeBonus > 0) {
+          $("message").textContent = `🔥 СЕРИЯ ×${combo}! +${earnedTimeBonus} сек.`;
         } else {
           $("message").textContent = "🔥 Комбо x" + multiplier;
         }
@@ -1453,9 +1586,11 @@
       game.addEventListener("click", () => {
         if (!playing) return;
 
+        missesThisRun++;
         combo = 0;
         updateDisplay();
-        $("message").textContent = "Промах! Комбо сброшено.";
+        $("message").textContent = "Промах! Комбо сброшено. Будь точнее!";
+        playSound(220);
       });
 
       function openShop() {
